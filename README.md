@@ -1,51 +1,81 @@
-# 초원 식물의 공간 점유 변화 — 계획서 기준 보완본
+# 식물이 사라진 자리에는 무엇이 남을까?
 
-원본 계획서의 세 질문에 맞춘 웹앱입니다. 기존 분석은 상위 폴더에 보존하고, 이 폴더의 앱과 보고서를 최신 보완본으로 사용합니다.
+1997–2010년 미국 콜로라도 단초원 고정 조사구에서 식물의 공간 점유 기록이 다음 해 어떻게 달라졌는지 살펴보는 인터랙티브 연구 웹사이트입니다.
 
-## 실행
-Python 3.13에서 다음을 실행합니다.
+**사용자가 처음 열어 볼 페이지는 `app.py`입니다.** Streamlit에서 연구 이야기·공간 지도·소실의 조건과 예측·분석 방법을 탐색할 수 있습니다. 정적 HTML이 아니므로 GitHub Pages가 아니라 **Streamlit Community Cloud** 등 Python 실행 환경에 배포해야 합니다.
 
-```powershell
-cd "C:\Users\송형륜\Documents\Codex\2026-10-31\e\outputs\grassland-research\final\revision"
+## 무엇을 분석했나
+
+- 24개 고정 1㎡ 조사구의 1997–2010년 자료를 10cm 격자로 변환해 관측이 이어진 연도쌍의 같은 위치를 비교했습니다.
+- *Bouteloua gracilis*의 단독 점유 소실 194칸·연도 사례 중 다른 종의 신규 기록 75건, 식별 불확실 94건, 다른 식물 다각형 기록 없음 25건을 분류했습니다.
+- 주변 타종 점유 비율과 기존 종의 기록 소실률 사이의 관계를 분석했습니다. 목장별 방목 조건 차이도 검토했지만, 관측된 관계를 직접적인 인과효과로 해석하지 않았습니다.
+- 기존 정보만 사용한 모델과 주변 식물 정보를 추가한 모델의 신규 타종 기록 예측 성능을 비교했습니다. AP, F1은 소폭 상승했지만 개선의 불확실성이 큽니다.
+
+**중요:** 기록 소실은 식물 사망이 아닙니다. 다각형 식물 기록 없음은 실제 빈 땅을 의미하지 않습니다. 한 칸에서의 변화를 식물 개체의 이동이나 직접적인 종 교체 과정으로 해석해서는 안 됩니다.
+
+## 실행 방법
+
+Python 3.11–3.13 환경에서 아래 명령어를 실행합니다. `requirements.txt`의 버전 범위 안에서 호환 버전을 설치합니다.
+
+```bash
 python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-기존 앱이 8501 포트를 사용하면 마지막 명령에 `--server.port 8502`를 붙입니다.
+브라우저에서 Streamlit이 알려주는 로컬 주소(일반적으로 `http://localhost:8501`)를 엽니다.
 
-## 구성
-- app.py: 다섯 화면, 실제 표본 필터
-- data: 격자별 자료, 모델 평가 확률, 분할과 설정, 집계표
-- graphs: 연구 질문별 PNG
-- 연구결과.md: 방법·결과·해석·제안
-- validation.json: 기존 격자 분석과의 수치 대조
-- 전체 프로젝트 ZIP의 scripts: 추가 분석과 검증 코드
+## GitHub에 올리는 방법
 
-추가 분석은 기존 `phase2/species_geometry.parquet`와 `phase2/spatial_transitions.csv`를 재사용합니다. 전체 프로젝트 폴더에서 `scripts/phase4_plan_grid.py`, `phase5_predict.py`, `phase6_deliver.py`, `validate_revision.py` 순서로 실행합니다. 기존 원자료 재현은 상위 README를 따릅니다. 앱 실행에는 사전 계산된 data만 필요합니다.
+1. 배포 ZIP의 **내부 파일과 폴더를 압축 해제**하여 GitHub 저장소 최상위 위치에 업로드합니다. ZIP 파일 하나만 업로드하면 Streamlit이 앱을 실행할 수 없습니다.
+2. 저장소 최상위에 `app.py`, `research.py`, `viz.py`, `requirements.txt`, `.streamlit/`, `data/`가 모두 있는지 확인합니다.
+3. Streamlit Community Cloud에서 저장소를 연결하고 **Main file path**를 `app.py`로 지정합니다.
+4. 앱이 공개되면 지도 필터, 그래프, 모바일 레이아웃을 실제 브라우저에서 확인합니다.
 
-## 정의
-기본10cm에서 양의 교차 면적을 점유로 정의합니다. 1% 기준과5·20cm는 민감도입니다. 단독 점유는 확인된 다각형 종 A만 기록되고 불확실 다각형이 없는 상태이며, 점 기록의 부재를 보장하지 않습니다. 소실은 A의 다음 해 다각형 기록이 없는 상태입니다.
+`data/`의 `.parquet` 파일은 **필수**입니다. GitHub에 소스 코드만 올리고 자료를 제외하면 웹앱이 실행되지 않습니다.
 
-예측은 t년에 A만 있던 전체 후보에서 t+1 타종 신규 관측을 예측합니다. 미래 A 소실로 후보를 선택하지 않습니다. 미래 식별 불확실 기록은 목표 판정에서 제외하며 이 선택이 일반화를 제한합니다. 같은 조사구의 미래 관측 성능이며 새로운 지역 성능이 아닙니다.
+## 프로젝트 구조
 
-## 배포
-저장소 https://github.com/Carinae082/Plant 는 지정되어 있으나, 마지막 파일 쓰기 시도는 연결 도구의 403 오류로 거부됐습니다. 공개 앱 URL은 아직 없습니다.
+```
+app.py                        설명과 탐색 페이지
+research.py                   기존 연구의 집계·지도 계산 함수 (보존)
+viz.py                        새 그림과 범례·타이포그래피에 맞춘 도표
+.streamlit/config.toml        Streamlit 테마 설정
+data/                         이전 Codex 실행에서 검증한 가공 자료
+scripts/audit_raw_shapefiles.py  원자료 ZIP의 파일·DBF 헤더 점검
+source_data/shapefiles.zip    (전체 소스 포함본에만 있음)
+tests/test_research.py        집계·파일 해시·그래프 회귀 테스트
+tests/test_charts_offline.py  독립적인 CSV·Plotly 사전 점검
+CHANGELOG.md                  이전 버전과 비교한 변경 내용
+DATA_NOTES.md                 자료 유래와 한계
+VALIDATION.md                 수행한 검증과 미검증 항목
+```
 
-이 폴더의 내용물을 저장소 루트에 올린 뒤 Streamlit Community Cloud에서 저장소 `Carinae082/Plant`, 브랜치 `main`, 파일 `app.py`, Python3.13을 선택합니다. ZIP 자체를 올리면 앱이 실행되지 않습니다.
+## 테스트
 
-GitHub Settings → Applications → Installed GitHub Apps → 연결 앱 Configure에서 Plant 접근 대상을 확인할 수 있습니다. 사용자가 앱이 요청하지 않은 쓰기 권한을 임의로 추가할 수는 없습니다. 읽기 전용 연결이면 웹 직접 업로드나 쓰기 지원 연결을 사용해야 합니다. 계정 로그인과 권한 동의는 사용자가 수행합니다.
+```bash
+python -m unittest discover -s tests -v
+```
 
-## 출처와 AI
-Chu et al.(2013), https://doi.org/10.1890/13-0121.1 ; https://doi.org/10.6084/m9.figshare.3556779.v1 . Shortgrass Steppe LTER 제공 자료입니다.
+아래 검사는 Streamlit/Parquet 엔진 없이 CSV와 Plotly만으로 가능한 별도 그래프 검사입니다.
 
-OpenAI (2026). Codex(GPT-6 계열; 보완 작업의 정확한 모델 버전은 별도 확인하지 않음). 생성일2026-11-01. 입력 요청: 기존 결과를 원본 계획서의 격자 소실·단독 점유 이후 상태·주변 정보 추가 예측 비교에 맞추어 보완. 도구 안내 https://openai.com/codex/ . AI는 코드 작성·검증·초안 작성을 보조했습니다. 제출자는 분석 정의, 결과 해석, 적용 제안을 검토하고 데이터 로딩·사이드바·차트 코드를 설명해야 합니다. 학생 개인정보와 원본 학교 안내문은 배포 파일에 포함하지 않습니다.
+```bash
+python -m unittest discover -s tests -p test_charts_offline.py -v
+```
 
+원자료 ZIP을 포함한 **전체 소스 포함본**에서 원자료 파일 구성 확인:
 
-## 최종 검수와 파일 선택
-최신 분석은 final/revision에 있습니다. 상위 app.py와 final의 기존 보고서는 이전 단계 보존본입니다.
-전체 ZIP을 풀고 프로젝트 루트에서 `python -m pip install -r final/revision/requirements.txt`를 실행한 뒤 위 분석 순서를 따릅니다.
-최신 앱 실행: `python -m streamlit run final/revision/app.py --server.port 8502 --global.developmentMode false`.
-배포용 ZIP은 내용물을 저장소 루트에 풀어 사용합니다. 보고서와 발표자료는 전체 ZIP에 포함됩니다.
-웹앱 12개 화면·필터 조합과 기존 격자 집계 4,490행의 수치 일치를 확인했습니다. 새 가상환경에 의존성을 처음부터 설치하는 검사는 수행하지 않았습니다.
-발표자료 6장 전체의 PNG 렌더링을 확인했습니다. 실제 PowerPoint 데스크톱에서 재렌더링한 검사는 아닙니다.
-공개 GitHub 파일 업로드와 Streamlit 로그인·공개 URL 확인은 완료되지 않았습니다.
+```bash
+python scripts/audit_raw_shapefiles.py source_data/shapefiles.zip
+```
+
+이 원자료 검사 스크립트는 DBF 레코드 헤더와 파일 구성을 검사합니다. **Shapefile에서 가공 Parquet를 독립적으로 재계산하는 스크립트는 아닙니다.** 이전 분석 결과와 새로 제공된 원자료의 기하학적 완전 일치 여부까지 독립 검증했다고 주장하지 않습니다.
+
+## 데이터 출처 및 연구 윤리
+
+- Chu et al. (2013), *Ecology*, DOI: [10.1890/13-0121.1](https://doi.org/10.1890/13-0121.1)
+- Shortgrass Steppe LTER 자료: [Figshare](https://doi.org/10.6084/m9.figshare.3556779.v1), [Ecological Archives](https://esapubs.org/archive/ecol/E094/128/metadata.php)
+- 원자료 Shapefile은 사용자가 제공한 ZIP을 바탕으로 파일 구성 및 레코드 수를 확인했습니다.
+- 가공 Parquet, 모델 지표는 이전 Codex 결과물에서 이어받았습니다. 이번 수정의 중심은 **웹사이트 정보 구조, 시각화, 설명, 탐색 흐름**입니다. 모델을 새로 학습했다고 주장하지 않습니다.
+- 별도의 `LICENSE`를 두지 않았습니다. 외부 연구 원자료의 재배포 조건과 코드의 공개 라이선스는 별도로 확인해야 합니다.
+
+코드·페이지 제작에는 AI 보조를 사용했습니다. 최종 결론과 발표 내용은 연구자가 검토해야 합니다.
