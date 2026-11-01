@@ -1,0 +1,25 @@
+name: Auto Commit by GPT
+
+on:
+  workflow_dispatch: # GitHub 웹에서 수동으로 실행할 수 있게 해줍니다.
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }} # 방금 등록한 시크릿 토큰을 사용합니다.
+
+      - name: Make changes (Example)
+        run: |
+          echo "GPT Update - $(date)" >> update.txt
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GPT Bot"
+          git config --global user.email "bot@example.com"
+          git add update.txt
+          git commit -m "chore: update via automated action"
+          git push
